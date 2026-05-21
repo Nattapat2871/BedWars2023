@@ -69,10 +69,10 @@ dependencies {
     compileOnly 'de.dytanic.cloudnet:cloudnet-wrapper-jvm:3.4.5-RELEASE'
     slim 'redis.clients:jedis:5.0.2'
     slim 'com.flowpowered:flow-nbt:2.0.2'
-    slim 'com.saicone.rtag:rtag:1.5.13'
-    slim 'com.saicone.rtag:rtag-block:1.5.13'
-    slim 'com.saicone.rtag:rtag-entity:1.5.13'
-    slim 'com.saicone.rtag:rtag-item:1.5.13'
+    slim 'com.saicone.rtag:rtag:1.5.15'
+    slim 'com.saicone.rtag:rtag-block:1.5.15'
+    slim 'com.saicone.rtag:rtag-entity:1.5.15'
+    slim 'com.saicone.rtag:rtag-item:1.5.15'
 }
 
 bukkit {
@@ -80,9 +80,9 @@ bukkit {
     main = 'com.tomkeuper.bedwars.BedWars'
     apiVersion = '1.13'
 
-    author = 'Mr. Ceasar'
-    description = 'BedWars minigame by Mr Ceasar forked from BedWars1058'
-    version = "${project.version}"
+    author = "Mr. Ceasar, Nattapat2871"
+    description = 'BedWars minigame forked from BedWars1058 and updated to 1.21.11 by Nattapat2871'
+    version = "2.8.7-NAM"
 
     load = 'STARTUP'
     depend = ['TAB']
@@ -110,22 +110,23 @@ tasks.named('processResources') {
 // Projects to merge into the shaded jar
 def versions = [
     ':versionsupport_common',
-    ':versionsupport_1_8_r3',
-    ':versionsupport_1_12_r1',
-    ':versionsupport_v1_16_r3',
-    ':versionsupport_v1_17_r1',
-    ':versionsupport_v1_18_r2',
-    ':versionsupport_v1_19_r3',
-    ':versionsupport_v1_20_r4',
-    ':versionsupport_v1_20_6',
-    ':versionsupport_v1_21_r1',
-    ':versionsupport_v1_21_r2',
-    ':versionsupport_v1_21_r3',
-    ':versionsupport_v1_21_r5',
-    ':resetadapter_slime',
-    ':resetadapter_slimepaper',
-    ':resetadapter_advancedslimepaper',
-    ':resetadapter_aswm'
+//    ':versionsupport_1_8_r3',
+//    ':versionsupport_1_12_r1',
+//    ':versionsupport_v1_16_r3',
+//    ':versionsupport_v1_17_r1',
+//    ':versionsupport_v1_18_r2',
+//    ':versionsupport_v1_19_r3',
+//    ':versionsupport_v1_20_r4',
+//    ':versionsupport_v1_20_6',
+//    ':versionsupport_v1_21_r1',
+//    ':versionsupport_v1_21_r2',
+//    ':versionsupport_v1_21_r3',
+//    ':versionsupport_v1_21_r5',
+    ':versionsupport_v1_21_r7',
+//    ':resetadapter_slime',
+//    ':resetadapter_slimepaper',
+//    ':resetadapter_advancedslimepaper',
+//    ':resetadapter_aswm'
 ] as Set
 
 slimJar {
@@ -135,7 +136,7 @@ slimJar {
 // Shade configuration and aggregation of platform modules
 tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) { shadow ->
     mustRunAfter 'slimJar'
-    archiveFileName = "BedWars-${project.version}.jar"
+    archiveFileName = "BedWars-2.8.7-NAM.jar"
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     versions.each { path ->
