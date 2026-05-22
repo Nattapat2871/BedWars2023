@@ -26,7 +26,6 @@ import com.tomkeuper.bedwars.api.configuration.ConfigPath;
 import com.tomkeuper.bedwars.api.language.Language;
 import com.tomkeuper.bedwars.api.server.ServerType;
 import com.tomkeuper.bedwars.arena.Misc;
-import org.apache.logging.log4j.core.config.Loggers;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -106,33 +105,34 @@ public class MainConfig extends ConfigManager {
         yml.addDefault("min-players-per-mode.3v3v3v3", 4);
         yml.addDefault("min-players-per-mode.4v4v4v4", 5);
 
-        // Individual Lobby Items Initialization
-        String path = "lobby-items.";
-        if (yml.get(path + "stats.material") == null) {
-            yml.set(path + "stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
-            yml.set(path + "stats.data", 3);
-            yml.set(path + "stats.slot", 0);
-            yml.set(path + "stats.enchanted", false);
+        // Robust Individual Lobby Items Initialization
+        String lp = "lobby-items.";
+        if (yml.get(lp + "stats.material") == null) {
+            yml.set(lp + "stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
+            yml.set(lp + "stats.data", 3);
+            yml.set(lp + "stats.slot", 0);
+            yml.set(lp + "stats.enchanted", false);
         }
-        if (yml.get(path + "arena-selector.material") == null) {
-            yml.set(path + "arena-selector.material", "COMPASS");
-            yml.set(path + "arena-selector.data", 0);
-            yml.set(path + "arena-selector.slot", 2);
-            yml.set(path + "arena-selector.enchanted", false);
+        if (yml.get(lp + "arena-selector.material") == null) {
+            yml.set(lp + "arena-selector.material", "CHEST");
+            yml.set(lp + "arena-selector.data", 5);
+            yml.set(lp + "arena-selector.slot", 4);
+            yml.set(lp + "arena-selector.enchanted", false);
+            yml.set(lp + "arena-selector.command", "deluxemenu open bedwar_menu");
         }
-        if (yml.get(path + "cosmetics.material") == null) {
-            yml.set(path + "cosmetics.material", "BOOK");
-            yml.set(path + "cosmetics.data", 0);
-            yml.set(path + "cosmetics.slot", 4);
-            yml.set(path + "cosmetics.enchanted", false);
-            yml.set(path + "cosmetics.command", "bwc menu");
+        if (yml.get(lp + "cosmetics.material") == null && yml.get(lp + "bedwar-cosmetic-menu.material") == null) {
+            yml.set(lp + "cosmetics.material", "BOOK");
+            yml.set(lp + "cosmetics.data", 0);
+            yml.set(lp + "cosmetics.slot", 1);
+            yml.set(lp + "cosmetics.enchanted", true);
+            yml.set(lp + "cosmetics.command", "bwc menu");
         }
-        if (yml.get(path + "leave.material") == null) {
-            yml.set(path + "leave.material", "NETHER_STAR");
-            yml.set(path + "leave.data", 0);
-            yml.set(path + "leave.slot", 8);
-            yml.set(path + "leave.enchanted", false);
-            yml.set(path + "leave.command", "lobby");
+        if (yml.get(lp + "leave.material") == null) {
+            yml.set(lp + "leave.material", "NETHER_STAR");
+            yml.set(lp + "leave.data", 0);
+            yml.set(lp + "leave.slot", 8);
+            yml.set(lp + "leave.enchanted", false);
+            yml.set(lp + "leave.command", "lobby");
         }
 
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RESTART, 15);
@@ -222,8 +222,8 @@ public class MainConfig extends ConfigManager {
 
         /* Multi-Arena Lobby Command Items */
         saveLobbyCommandItem("stats", null, false, BedWars.getForCurrentVersion("SKULL_ITEM", "SKULL_ITEM", "PLAYER_HEAD"), 3, 0);
-        saveLobbyCommandItem("arena-selector", "bw gui", true, "CHEST", 5, 4);
-        saveLobbyCommandItem("leave", null, false, BedWars.getForCurrentVersion("BED", "BED", "RED_BED"), 0, 8);
+        saveLobbyCommandItem("arena-selector", "deluxemenu open bedwar_menu", true, "CHEST", 5, 4);
+        saveLobbyCommandItem("leave", "lobby", false, "NETHER_STAR", 0, 8);
 
         /* Pre Game Command Items */
         savePreGameCommandItem("stats", null, false, BedWars.getForCurrentVersion("SKULL_ITEM", "SKULL_ITEM", "PLAYER_HEAD"), 3, 0);

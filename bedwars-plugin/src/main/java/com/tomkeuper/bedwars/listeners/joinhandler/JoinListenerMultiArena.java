@@ -83,8 +83,12 @@ public class JoinListenerMultiArena implements Listener {
             PaperSupport.teleportC(p, lobbyLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
 
-        // Send items
-        Arena.sendLobbyCommandItems(p);
+        // Send items with a small delay to ensure skin and world are set
+        Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
+            if (p.isOnline()) {
+                Arena.sendLobbyCommandItems(p);
+            }
+        }, 5L);
 
         p.setHealthScale(p.getMaxHealth());
         p.setExp(0);
