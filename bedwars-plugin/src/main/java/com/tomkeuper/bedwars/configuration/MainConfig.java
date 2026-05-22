@@ -106,23 +106,33 @@ public class MainConfig extends ConfigManager {
         yml.addDefault("min-players-per-mode.3v3v3v3", 4);
         yml.addDefault("min-players-per-mode.4v4v4v4", 5);
 
-        // Lobby Items Configuration
-        if (yml.getConfigurationSection("lobby-items") == null || yml.getConfigurationSection("lobby-items").getKeys(false).isEmpty()) {
-            yml.set("lobby-items.stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
-            yml.set("lobby-items.stats.data", 3);
-            yml.set("lobby-items.stats.slot", 0);
-            yml.set("lobby-items.stats.enchanted", false);
-            
-            yml.set("lobby-items.arena-selector.material", "COMPASS");
-            yml.set("lobby-items.arena-selector.data", 0);
-            yml.set("lobby-items.arena-selector.slot", 2);
-            yml.set("lobby-items.arena-selector.enchanted", false);
-
-            yml.set("lobby-items.cosmetics.material", "BOOK");
-            yml.set("lobby-items.cosmetics.data", 0);
-            yml.set("lobby-items.cosmetics.slot", 4);
-            yml.set("lobby-items.cosmetics.enchanted", false);
-            yml.set("lobby-items.cosmetics.command", "bwc menu");
+        // Individual Lobby Items Initialization
+        String path = "lobby-items.";
+        if (yml.get(path + "stats.material") == null) {
+            yml.set(path + "stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
+            yml.set(path + "stats.data", 3);
+            yml.set(path + "stats.slot", 0);
+            yml.set(path + "stats.enchanted", false);
+        }
+        if (yml.get(path + "arena-selector.material") == null) {
+            yml.set(path + "arena-selector.material", "COMPASS");
+            yml.set(path + "arena-selector.data", 0);
+            yml.set(path + "arena-selector.slot", 2);
+            yml.set(path + "arena-selector.enchanted", false);
+        }
+        if (yml.get(path + "cosmetics.material") == null) {
+            yml.set(path + "cosmetics.material", "BOOK");
+            yml.set(path + "cosmetics.data", 0);
+            yml.set(path + "cosmetics.slot", 4);
+            yml.set(path + "cosmetics.enchanted", false);
+            yml.set(path + "cosmetics.command", "bwc menu");
+        }
+        if (yml.get(path + "leave.material") == null) {
+            yml.set(path + "leave.material", "NETHER_STAR");
+            yml.set(path + "leave.data", 0);
+            yml.set(path + "leave.slot", 8);
+            yml.set(path + "leave.enchanted", false);
+            yml.set(path + "leave.command", "lobby");
         }
 
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RESTART, 15);

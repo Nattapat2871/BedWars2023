@@ -1018,15 +1018,18 @@ public class Arena implements IArena {
 
         /* restore player inventory */
         PlayerGoods pg = PlayerGoods.getPlayerGoods(p);
-        if (pg == null) {
-            // if there is no previous backup of the inventory send lobby items if multi arena
-            if (BedWars.getServerType() == ServerType.MULTIARENA) {
-                // Send items
-                Arena.sendLobbyCommandItems(p);
-            }
-        } else {
+        if (pg != null) {
             pg.restore();
         }
+
+        if (BedWars.getServerType() == ServerType.MULTIARENA) {
+            Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
+                if (p.isOnline()) {
+                    Arena.sendLobbyCommandItems(p);
+                }
+            }, 10L);
+        }
+
         playerLocation.remove(p);
         for (PotionEffect pf : p.getActivePotionEffects()) {
             p.removePotionEffect(pf.getType());
