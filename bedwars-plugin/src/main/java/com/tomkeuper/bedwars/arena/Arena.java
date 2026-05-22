@@ -50,6 +50,7 @@ import com.tomkeuper.bedwars.api.language.Language;
 import com.tomkeuper.bedwars.api.language.Messages;
 import com.tomkeuper.bedwars.api.region.Region;
 import com.tomkeuper.bedwars.api.server.ServerType;
+import com.tomkeuper.bedwars.utils.ItemBuilder;
 import com.tomkeuper.bedwars.api.tasks.AnnouncementTask;
 import com.tomkeuper.bedwars.api.tasks.PlayingTask;
 import com.tomkeuper.bedwars.api.tasks.RestartingTask;
@@ -1873,63 +1874,59 @@ public class Arena implements IArena {
      * This will clear the inventory first.
      */
     public static void sendLobbyCommandItems(Player p) {
-        if (!BedWars.config.getLobbyWorldName().equalsIgnoreCase(p.getWorld().getName())) return;
-        p.getInventory().clear();
+        if (p == null) return;
+        String worldName = p.getWorld().getName();
+        String lobbyWorld = BedWars.config.getLobbyWorldName();
+        
+        BedWars.plugin.debug("DEBUG: sendLobbyCommandItems for " + p.getName() + " in " + worldName + " (Lobby: " + lobbyWorld + ")");
+        
+        if (!lobbyWorld.equalsIgnoreCase(worldName)) {
+             return;
+        }
+        
+        try {
+            p.getInventory().clear();
+            Collection<IPermanentItem> items = BedWars.getAPI().getItemUtil().getLobbyItems();
 
-        for (IPermanentItem lobbyItem : BedWars.getAPI().getItemUtil().getLobbyItems()) {
-            ItemStack item = lobbyItem.getItem();
+            for (IPermanentItem lobbyItem : items) {
+                try {
+                    if (lobbyItem.getHandler() != null && !lobbyItem.getHandler().isVisible(p, null)) continue;
+                    
+                    ItemStack item = lobbyItem.getItem();
+                    if (item == null) continue;
 
-            if (BedWars.nms.isPlayerHead(item.getType().name(), item.getDurability())) {
-                ItemStack head;
-                String[] skin = null;
-                if (Bukkit.getPluginManager().isPluginEnabled("SkinsRestorer")) {
-                    try {
-                        Object apiInstance = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider").getMethod("get").invoke(null);
-                        Object storage = apiInstance.getClass().getMethod("getPlayerStorage").invoke(apiInstance);
-                        java.util.Optional<?> skinProp = (java.util.Optional<?>) storage.getClass().getMethod("getSkinOfPlayer", UUID.class).invoke(storage, p.getUniqueId());
-                        if (skinProp.isPresent()) {
-                            Object prop = skinProp.get();
-                            String value = (String) prop.getClass().getMethod("getValue").invoke(prop);
-                            String signature = (String) prop.getClass().getMethod("getSignature").invoke(prop);
-                            skin = new String[]{value, signature};
-                        }
-                    } catch (Exception ignored) {}
-                }
+                    ItemBuilder builder = new ItemBuilder(item.getType());
+                    ItemMeta origMeta = item.getItemMeta();
+                    if (origMeta != null) {
+                        if (origMeta.hasDisplayName()) builder.setName(origMeta.getDisplayName());
+                        if (origMeta.hasLore()) builder.setLore(origMeta.getLore());
+                        for (ItemFlag flag : origMeta.getItemFlags()) builder.addItemFlags(flag);
+                        for (var e : origMeta.getEnchants().entrySet()) builder.addEnchantment(e.getKey(), e.getValue());
+                    }
 
-                if (skin != null) {
-                    head = SkullTexture.setTexture(new ItemStack(Material.valueOf(BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
-                } else {
-                    head = SkullTexture.getTexturedHead(p.getName());
+                    if (BedWars.nms.isPlayerHead(item.getType().name(), item.getDurability())) {
+                        builder.setSkull(p);
+                    }
+
+                    String name = SupportPAPI.getSupportPAPI().replace(p,
+                            getMsg(p, Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_NAME.replace("%path%", lobbyItem.getIdentifier())));
+                    builder.setName(name);
+
+                    List<String> lore = SupportPAPI.getSupportPAPI().replace(p,
+                            getList(p, Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_LORE.replace("%path%", lobbyItem.getIdentifier())));
+                    builder.setLore(lore);
+                    
+                    item = builder.build();
+                    item = BedWars.nms.addCustomData(item, lobbyItem.getIdentifier());
+                    item = BedWars.nms.setTag(item, "ACTION", lobbyItem.getIdentifier());
+                    
+                    p.getInventory().setItem(lobbyItem.getSlot(), item);
+                } catch (Exception ex) {
+                    BedWars.plugin.getLogger().log(java.util.logging.Level.SEVERE, "Error giving lobby item " + lobbyItem.getIdentifier() + " to " + p.getName(), ex);
                 }
-                SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
-                ItemMeta origMeta = item.getItemMeta();
-                if (origMeta != null) {
-                    skullMeta.setDisplayName(origMeta.getDisplayName());
-                    skullMeta.setLore(origMeta.getLore());
-                    for (ItemFlag flag : origMeta.getItemFlags())
-                        skullMeta.addItemFlags(flag);
-                    for (var e : origMeta.getEnchants().entrySet())
-                        skullMeta.addEnchant(e.getKey(), e.getValue(), true);
-                }
-                head.setItemMeta(skullMeta);
-                head = BedWars.nms.addCustomData(head, lobbyItem.getIdentifier());
-                head = BedWars.nms.setTag(head, "ACTION", lobbyItem.getIdentifier());
-                item = head;
             }
-
-            // Update the item's display name and lore based on the player's language.
-            ItemMeta itemMeta = item.getItemMeta();
-            if (itemMeta != null) {
-                String name = SupportPAPI.getSupportPAPI().replace(p,
-                        getMsg(p, Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_NAME.replace("%path%", lobbyItem.getIdentifier())));
-                List<String> lore = SupportPAPI.getSupportPAPI().replace(p,
-                        getList(p, Messages.GENERAL_CONFIGURATION_LOBBY_ITEMS_LORE.replace("%path%", lobbyItem.getIdentifier())));
-                itemMeta.setDisplayName(name);
-                itemMeta.setLore(lore);
-                item.setItemMeta(itemMeta);
-            }
-
-            if (lobbyItem.getHandler().isVisible(p, null)) p.getInventory().setItem(lobbyItem.getSlot(), item);
+        } catch (Exception ex) {
+            BedWars.plugin.getLogger().log(java.util.logging.Level.SEVERE, "Critical error in sendLobbyCommandItems for " + p.getName(), ex);
         }
     }
 
@@ -1944,41 +1941,22 @@ public class Arena implements IArena {
             ItemStack item = preGameItem.getItem();
 
             if (BedWars.nms.isPlayerHead(item.getType().name(), item.getDurability())) {
-                ItemStack head;
-                String[] skin = null;
-                if (Bukkit.getPluginManager().isPluginEnabled("SkinsRestorer")) {
-                    try {
-                        Object apiInstance = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider").getMethod("get").invoke(null);
-                        Object storage = apiInstance.getClass().getMethod("getPlayerStorage").invoke(apiInstance);
-                        java.util.Optional<?> skinProp = (java.util.Optional<?>) storage.getClass().getMethod("getSkinOfPlayer", UUID.class).invoke(storage, p.getUniqueId());
-                        if (skinProp.isPresent()) {
-                            Object prop = skinProp.get();
-                            String value = (String) prop.getClass().getMethod("getValue").invoke(prop);
-                            String signature = (String) prop.getClass().getMethod("getSignature").invoke(prop);
-                            skin = new String[]{value, signature};
-                        }
-                    } catch (Exception ignored) {}
-                }
-
-                if (skin != null) {
-                    head = SkullTexture.setTexture(new ItemStack(Material.valueOf(BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
-                } else {
-                    head = SkullTexture.getTexturedHead(p.getName());
-                }
-                SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
+                ItemBuilder builder = new ItemBuilder(item.getType());
+                // Copy existing meta to builder
                 ItemMeta origMeta = item.getItemMeta();
                 if (origMeta != null) {
-                    skullMeta.setDisplayName(origMeta.getDisplayName());
-                    skullMeta.setLore(origMeta.getLore());
-                    for (ItemFlag flag : origMeta.getItemFlags())
-                        skullMeta.addItemFlags(flag);
-                    for (var e : origMeta.getEnchants().entrySet())
-                        skullMeta.addEnchant(e.getKey(), e.getValue(), true);
+                    builder.setName(origMeta.getDisplayName());
+                    builder.setLore(origMeta.getLore());
+                    for (ItemFlag flag : origMeta.getItemFlags()) builder.addItemFlags(flag);
+                    for (var e : origMeta.getEnchants().entrySet()) builder.addEnchantment(e.getKey(), e.getValue());
                 }
-                head.setItemMeta(skullMeta);
-                head = BedWars.nms.addCustomData(head, preGameItem.getIdentifier());
-                head = BedWars.nms.setTag(head, "ACTION", preGameItem.getIdentifier());
-                item = head;
+
+                // Set skin using the new helper method which handles SkinsRestorer
+                builder.setSkull(p);
+
+                item = builder.build();
+                item = BedWars.nms.addCustomData(item, preGameItem.getIdentifier());
+                item = BedWars.nms.setTag(item, "ACTION", preGameItem.getIdentifier());
             }
 
             // Update the item meta (display name and lore) based on the player's language.
@@ -2008,41 +1986,22 @@ public class Arena implements IArena {
             ItemStack item = spectatorItem.getItem();
 
             if (BedWars.nms.isPlayerHead(item.getType().name(), item.getDurability())) {
-                ItemStack head;
-                String[] skin = null;
-                if (Bukkit.getPluginManager().isPluginEnabled("SkinsRestorer")) {
-                    try {
-                        Object apiInstance = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider").getMethod("get").invoke(null);
-                        Object storage = apiInstance.getClass().getMethod("getPlayerStorage").invoke(apiInstance);
-                        java.util.Optional<?> skinProp = (java.util.Optional<?>) storage.getClass().getMethod("getSkinOfPlayer", UUID.class).invoke(storage, p.getUniqueId());
-                        if (skinProp.isPresent()) {
-                            Object prop = skinProp.get();
-                            String value = (String) prop.getClass().getMethod("getValue").invoke(prop);
-                            String signature = (String) prop.getClass().getMethod("getSignature").invoke(prop);
-                            skin = new String[]{value, signature};
-                        }
-                    } catch (Exception ignored) {}
-                }
-
-                if (skin != null) {
-                    head = SkullTexture.setTexture(new ItemStack(Material.valueOf(BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
-                } else {
-                    head = SkullTexture.getTexturedHead(p.getName());
-                }
-                SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
+                ItemBuilder builder = new ItemBuilder(item.getType());
+                // Copy existing meta to builder
                 ItemMeta origMeta = item.getItemMeta();
                 if (origMeta != null) {
-                    skullMeta.setDisplayName(origMeta.getDisplayName());
-                    skullMeta.setLore(origMeta.getLore());
-                    for (ItemFlag flag : origMeta.getItemFlags())
-                        skullMeta.addItemFlags(flag);
-                    for (var e : origMeta.getEnchants().entrySet())
-                        skullMeta.addEnchant(e.getKey(), e.getValue(), true);
+                    builder.setName(origMeta.getDisplayName());
+                    builder.setLore(origMeta.getLore());
+                    for (ItemFlag flag : origMeta.getItemFlags()) builder.addItemFlags(flag);
+                    for (var e : origMeta.getEnchants().entrySet()) builder.addEnchantment(e.getKey(), e.getValue());
                 }
-                head.setItemMeta(skullMeta);
-                head = BedWars.nms.addCustomData(head, spectatorItem.getIdentifier());
-                head = BedWars.nms.setTag(head, "ACTION", spectatorItem.getIdentifier());
-                item = head;
+
+                // Set skin using the new helper method which handles SkinsRestorer
+                builder.setSkull(p);
+
+                item = builder.build();
+                item = BedWars.nms.addCustomData(item, spectatorItem.getIdentifier());
+                item = BedWars.nms.setTag(item, "ACTION", spectatorItem.getIdentifier());
             }
 
             ItemMeta itemMeta = item.getItemMeta();

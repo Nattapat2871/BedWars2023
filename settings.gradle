@@ -23,5 +23,8 @@ include ':versionsupport_common'
 // include only 1.21.11
 include ':versionsupport_v1_21_r7'
 
+// reset adapters
+include ':resetadapter_advancedslimepaper'
+
 // Enable type-safe project accessors for Kotlin DSL usages that remain
 enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')

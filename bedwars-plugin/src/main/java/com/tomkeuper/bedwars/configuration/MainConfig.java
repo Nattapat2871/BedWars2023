@@ -339,7 +339,7 @@ public class MainConfig extends ConfigManager {
         if (getYml().get("lobbyLoc") == null) return "";
         String d = getYml().getString("lobbyLoc");
         String[] data = d.replace("[", "").replace("]", "").split(",");
-        return data[data.length - 1];
+        return data[data.length - 1].trim();
     }
 
     /**

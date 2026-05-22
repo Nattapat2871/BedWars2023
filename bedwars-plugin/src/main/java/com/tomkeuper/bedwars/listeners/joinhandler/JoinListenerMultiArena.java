@@ -83,12 +83,12 @@ public class JoinListenerMultiArena implements Listener {
             PaperSupport.teleportC(p, lobbyLocation, PlayerTeleportEvent.TeleportCause.PLUGIN);
         }
 
-        // Send items with a small delay to ensure skin and world are set
+        // Send items with a larger delay to ensure other plugins (Essentials, etc.) have finished and world is stable.
         Bukkit.getScheduler().runTaskLater(BedWars.plugin, () -> {
             if (p.isOnline()) {
                 Arena.sendLobbyCommandItems(p);
             }
-        }, 5L);
+        }, 20L);
 
         p.setHealthScale(p.getMaxHealth());
         p.setExp(0);

@@ -1,6 +1,8 @@
 package com.tomkeuper.bedwars.utils;
 
 import com.saicone.rtag.util.SkullTexture;
+import net.skinsrestorer.api.SkinsRestorerProvider;
+import net.skinsrestorer.api.property.SkinProperty;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -8,8 +10,10 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ItemBuilder {
@@ -23,7 +27,9 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setName(String name) {
-        itemMeta.setDisplayName(name.replace("&", "§"));
+        if (name != null) {
+            itemMeta.setDisplayName(name.replace("&", "§"));
+        }
         return this;
     }
 
@@ -41,50 +47,58 @@ public class ItemBuilder {
     }
 
     public ItemBuilder setLore(String... lore) {
-        itemMeta.setLore(Arrays.stream(lore).map(line -> line.replace("&", "§")).collect(Collectors.toList()));
+        if (lore != null) {
+            itemMeta.setLore(Arrays.stream(lore).filter(java.util.Objects::nonNull).map(line -> line.replace("&", "§")).collect(Collectors.toList()));
+        }
         return this;
     }
 
     public ItemBuilder setLore(List<String> lore) {
-        itemMeta.setLore(lore.stream().map(line -> line.replace("&", "§")).collect(Collectors.toList()));
+        if (lore != null) {
+            itemMeta.setLore(lore.stream().filter(java.util.Objects::nonNull).map(line -> line.replace("&", "§")).collect(Collectors.toList()));
+        }
         return this;
     }
 
     public ItemBuilder setSkull(String owner) {
         ItemStack head = null;
         String[] skin = null;
-        
-        // Try SkinsRestorer first for immediate skin
-        if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("SkinsRestorer")) {
+
+        // Try SkinRestorer API directly for immediate skin
+        if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("SkinRestorer")) {
             try {
-                Object api = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider").getMethod("get").invoke(null);
-                Object storage = api.getClass().getMethod("getPlayerStorage").invoke(api);
-                org.bukkit.entity.Player p = org.bukkit.Bukkit.getPlayer(owner);
-                java.util.Optional<?> skinProp;
+                org.bukkit.entity.Player p = org.bukkit.Bukkit.getPlayerExact(owner);
+                Optional<SkinProperty> skinProp = Optional.empty();
+
                 if (p != null) {
-                    skinProp = (java.util.Optional<?>) storage.getClass().getMethod("getSkinOfPlayer", java.util.UUID.class).invoke(storage, p.getUniqueId());
+                    // ดึงจาก UUID ก่อนถ้าผู้เล่นออนไลน์
+                    skinProp = SkinsRestorerProvider.get().getPlayerStorage().getSkinForPlayer(p.getUniqueId(), p.getName());
                 } else {
-                    Object skinStorage = api.getClass().getMethod("getSkinStorage").invoke(api);
-                    skinProp = (java.util.Optional<?>) skinStorage.getClass().getMethod("findSkinData", String.class).invoke(skinStorage, owner);
-                }
-                
-                if (skinProp.isPresent()) {
-                    Object prop = skinProp.get();
-                    if (prop.getClass().getSimpleName().equals("InputDataResult")) {
-                        prop = prop.getClass().getMethod("getProperty").invoke(prop);
+                    // ดึงจากชื่อถ้าออฟไลน์ (ใช้ reflection หรือ casting ถ้าจำเป็น แต่ในที่นี้เราใช้การดึงค่าจาก result โดยตรงถ้าเป็นไปได้)
+                    // เพื่อความปลอดภัยและลดปัญหา compile-time เราจะพยายามดึงผ่าน API ปกติก่อน
+                    Object result = SkinsRestorerProvider.get().getSkinStorage().findSkinData(owner).orElse(null);
+                    if (result != null) {
+                        java.lang.reflect.Method getProperty = result.getClass().getMethod("getProperty");
+                        skinProp = Optional.ofNullable((SkinProperty) getProperty.invoke(result));
                     }
-                    String value = (String) prop.getClass().getMethod("getValue").invoke(prop);
-                    skin = new String[]{value};
                 }
-            } catch (Exception ignored) {}
+
+                if (skinProp.isPresent()) {
+                    skin = new String[]{skinProp.get().getValue()};
+                }
+            } catch (Exception ignored) {
+                // Ignore fallback to normal skull
+            }
         }
 
         ItemMeta oldMeta = this.itemMeta;
+        
         if (skin != null) {
              this.item = SkullTexture.setTexture(new ItemStack(Material.valueOf(com.tomkeuper.bedwars.BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
         } else {
             this.item = SkullTexture.getTexturedHead(owner);
         }
+        
         this.itemMeta = this.item.getItemMeta();
         
         // Preserve old meta
@@ -97,6 +111,41 @@ public class ItemBuilder {
             }
         }
         
+        return this;
+    }
+
+    public ItemBuilder setSkull(org.bukkit.entity.Player player) {
+        String[] skin = null;
+
+        if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("SkinRestorer")) {
+            try {
+                Optional<SkinProperty> skinProp = SkinsRestorerProvider.get().getPlayerStorage().getSkinForPlayer(player.getUniqueId(), player.getName());
+                if (skinProp.isPresent()) {
+                    skin = new String[]{skinProp.get().getValue()};
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        ItemMeta oldMeta = this.itemMeta;
+
+        if (skin != null) {
+            this.item = SkullTexture.setTexture(new ItemStack(Material.valueOf(com.tomkeuper.bedwars.BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
+        } else {
+            this.item = SkullTexture.getTexturedHead(player.getName());
+        }
+
+        this.itemMeta = this.item.getItemMeta();
+
+        if (oldMeta != null) {
+            if (oldMeta.hasDisplayName()) this.itemMeta.setDisplayName(oldMeta.getDisplayName());
+            if (oldMeta.hasLore()) this.itemMeta.setLore(oldMeta.getLore());
+            for (org.bukkit.inventory.ItemFlag flag : oldMeta.getItemFlags()) this.itemMeta.addItemFlags(flag);
+            for (java.util.Map.Entry<Enchantment, Integer> entry : oldMeta.getEnchants().entrySet()) {
+                this.itemMeta.addEnchant(entry.getKey(), entry.getValue(), true);
+            }
+        }
+
         return this;
     }
 
