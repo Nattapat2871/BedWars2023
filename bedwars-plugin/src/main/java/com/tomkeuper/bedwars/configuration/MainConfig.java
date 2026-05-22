@@ -106,21 +106,24 @@ public class MainConfig extends ConfigManager {
         yml.addDefault("min-players-per-mode.3v3v3v3", 4);
         yml.addDefault("min-players-per-mode.4v4v4v4", 5);
 
-        yml.addDefault("lobby-items.stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
-        yml.addDefault("lobby-items.stats.data", 3);
-        yml.addDefault("lobby-items.stats.slot", 0);
-        yml.addDefault("lobby-items.stats.enchanted", false);
-        
-        yml.addDefault("lobby-items.arena-selector.material", "COMPASS");
-        yml.addDefault("lobby-items.arena-selector.data", 0);
-        yml.addDefault("lobby-items.arena-selector.slot", 2);
-        yml.addDefault("lobby-items.arena-selector.enchanted", false);
+        // Lobby Items Configuration
+        if (yml.getConfigurationSection("lobby-items") == null || yml.getConfigurationSection("lobby-items").getKeys(false).isEmpty()) {
+            yml.set("lobby-items.stats.material", BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"));
+            yml.set("lobby-items.stats.data", 3);
+            yml.set("lobby-items.stats.slot", 0);
+            yml.set("lobby-items.stats.enchanted", false);
+            
+            yml.set("lobby-items.arena-selector.material", "COMPASS");
+            yml.set("lobby-items.arena-selector.data", 0);
+            yml.set("lobby-items.arena-selector.slot", 2);
+            yml.set("lobby-items.arena-selector.enchanted", false);
 
-        yml.addDefault("lobby-items.cosmetics.material", "BOOK");
-        yml.addDefault("lobby-items.cosmetics.data", 0);
-        yml.addDefault("lobby-items.cosmetics.slot", 4);
-        yml.addDefault("lobby-items.cosmetics.enchanted", false);
-        yml.addDefault("lobby-items.cosmetics.command", "bwc menu");
+            yml.set("lobby-items.cosmetics.material", "BOOK");
+            yml.set("lobby-items.cosmetics.data", 0);
+            yml.set("lobby-items.cosmetics.slot", 4);
+            yml.set("lobby-items.cosmetics.enchanted", false);
+            yml.set("lobby-items.cosmetics.command", "bwc menu");
+        }
 
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RESTART, 15);
         yml.addDefault(ConfigPath.GENERAL_CONFIGURATION_RE_SPAWN_COUNTDOWN, 5);
