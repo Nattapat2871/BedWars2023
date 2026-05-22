@@ -1179,7 +1179,6 @@ public class BedWars extends JavaPlugin {
                 continue;
             }
 
-            String materialStr = config.getYml().getString(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_MATERIAL.replace("%path%", item));
             if (materialStr == null) continue;
             Material material = Material.valueOf(materialStr.toUpperCase());
             int data = config.getInt(ConfigPath.GENERAL_CONFIGURATION_LOBBY_ITEMS_DATA.replace("%path%", item));

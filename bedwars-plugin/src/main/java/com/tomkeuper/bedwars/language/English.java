@@ -45,7 +45,14 @@ public class English extends Language {
         yml.addDefault(Messages.COMMAND_MAIN, Arrays.asList("", "&2▪ &7/" + BedWars.mainCmd + " stats", "&2▪ &7/" + BedWars.mainCmd + " join &o<arena/group>", "&2▪ &7/" + BedWars.mainCmd + " leave", "&2▪ &7/" + BedWars.mainCmd + " lang", "&2▪ &7/" + BedWars.mainCmd + " gui", "&2▪ &7/" + BedWars.mainCmd + " npc", "&2▪ &7/" + BedWars.mainCmd + " start &3(vip)"));
         
         yml.addDefault("lobby-items-stats-name", "&aMy Stats &7(Right-Click)");
-        yml.addDefault("lobby-items-stats-lore", List.of("&7Right-Click to view your statistics!"));
+        yml.addDefault("lobby-items-stats-lore", Arrays.asList(
+                "&7Wins: &e%bw_stats_wins%",
+                "&7Losses: &e%bw_stats_losses%",
+                "&7Kills: &e%bw_stats_kills%",
+                "&7Deaths: &e%bw_stats_deaths%",
+                "&7Beds Destroyed: &e%bw_stats_beds_destroyed%",
+                "",
+                "&eRight-Click to view full statistics!"));
         
         yml.addDefault("lobby-items-arena-selector-name", "&eArena Selector &7(Right-Click)");
         yml.addDefault("lobby-items-arena-selector-lore", List.of("&7Right-Click to open the arena selector!"));

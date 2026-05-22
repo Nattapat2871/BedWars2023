@@ -29,7 +29,7 @@ public class ItemBuilder {
 
     public ItemBuilder setGlow(boolean glow) {
         if (glow) {
-            itemMeta.addEnchant(Enchantment.FORTUNE, 1, true);
+            itemMeta.addEnchant(Enchantment.DURABILITY, 1, true);
             itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
         return this;
@@ -79,14 +79,24 @@ public class ItemBuilder {
             } catch (Exception ignored) {}
         }
 
+        ItemMeta oldMeta = this.itemMeta;
         if (skin != null) {
-             head = SkullTexture.setTexture(new ItemStack(Material.valueOf(com.tomkeuper.bedwars.BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
+             this.item = SkullTexture.setTexture(new ItemStack(Material.valueOf(com.tomkeuper.bedwars.BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD"))), skin[0]);
         } else {
-            head = SkullTexture.getTexturedHead(owner);
+            this.item = SkullTexture.getTexturedHead(owner);
+        }
+        this.itemMeta = this.item.getItemMeta();
+        
+        // Preserve old meta
+        if (oldMeta != null) {
+            if (oldMeta.hasDisplayName()) this.itemMeta.setDisplayName(oldMeta.getDisplayName());
+            if (oldMeta.hasLore()) this.itemMeta.setLore(oldMeta.getLore());
+            for (org.bukkit.inventory.ItemFlag flag : oldMeta.getItemFlags()) this.itemMeta.addItemFlags(flag);
+            for (java.util.Map.Entry<Enchantment, Integer> entry : oldMeta.getEnchants().entrySet()) {
+                this.itemMeta.addEnchant(entry.getKey(), entry.getValue(), true);
+            }
         }
         
-        this.item = head;
-        this.itemMeta = item.getItemMeta();
         return this;
     }
 
