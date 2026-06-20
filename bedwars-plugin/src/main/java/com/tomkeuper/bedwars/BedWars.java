@@ -424,6 +424,20 @@ public class BedWars extends JavaPlugin {
 
         registerEvents(new InvisibilityPotionListener());
 
+        // Initialize health objective for below name display
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            try {
+                org.bukkit.scoreboard.Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
+                if (board.getObjective("bw-health") == null) {
+                    org.bukkit.scoreboard.Objective health = board.registerNewObjective("bw-health", "health");
+                    health.setDisplayName(org.bukkit.ChatColor.RED + "❤");
+                    health.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.BELOW_NAME);
+                }
+            } catch (Exception e) {
+                getLogger().warning("Could not initialize health objective: " + e.getMessage());
+            }
+        }, 20L);
+
         statsManager = new StatsManager();
 
         /* Party support */

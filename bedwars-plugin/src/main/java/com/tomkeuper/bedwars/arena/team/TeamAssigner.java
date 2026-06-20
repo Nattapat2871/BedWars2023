@@ -124,55 +124,24 @@ public class TeamAssigner implements ITeamAssigner {
      * @return The target team to add a player, or null if no suitable team is found.
      */
     private static ITeam findTargetTeam(List<ITeam> teams, int maxPlayersPerTeam, int playerAmount) {
-        ITeam targetTeam = null;
-        int minPlayers = Integer.MAX_VALUE;
+        // Sort teams by size to always find the smallest one first (Balancing)
+        List<ITeam> sortedTeams = new ArrayList<>(teams);
+        sortedTeams.sort(Comparator.comparingInt(ITeam::getSize));
 
-        // Prioritize empty teams to split players
-        for (ITeam team : teams) {
+        // 1. Prioritize empty teams first to spread players out
+        for (ITeam team : sortedTeams) {
             if (team.getSize() == 0) {
                 return team;
             }
         }
 
-        // Find a team with fewer players than maxPlayersPerTeam - 1
-        for (ITeam team : teams) {
-            int numPlayers = team.getSize();
-            if (numPlayers < minPlayers && numPlayers < maxPlayersPerTeam - 1) {
-                targetTeam = team;
-                minPlayers = numPlayers;
-            }
-
-            // Group players together if 1 player in team. Only if playerAmount > 2 and team size is not bigger than maxPlayersPerTeam
-            if (numPlayers == 1 && (playerAmount > 2) && (maxPlayersPerTeam > numPlayers)){
-                BedWars.debug("found team with 1 player (" + team.getName() + ")");
+        // 2. Find the smallest team that is not full
+        for (ITeam team : sortedTeams) {
+            if (team.getSize() < maxPlayersPerTeam) {
                 return team;
             }
         }
 
-        // If no suitable team is found, find the first team with available space and no more than 1 player
-        if (targetTeam == null) {
-            for (ITeam team : teams) {
-                if (team.getSize() == 1 && playerAmount <= maxPlayersPerTeam) {
-                    // Skip teams with 1 player when playerAmount is set to 2
-                    continue;
-                }
-                if (team.getSize() < maxPlayersPerTeam - 1) {
-                    targetTeam = team;
-                    break;
-                }
-            }
-        }
-
-        // If ALL other team assigners fail. Fall back to first open spot
-        if (targetTeam == null) {
-            for (ITeam team : teams) {
-                if (team.getSize() < maxPlayersPerTeam) {
-                    targetTeam = team;
-                    break;
-                }
-            }
-        }
-
-        return targetTeam;
+        return sortedTeams.isEmpty() ? null : sortedTeams.get(0);
     }
 }

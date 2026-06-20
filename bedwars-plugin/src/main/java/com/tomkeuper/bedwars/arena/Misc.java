@@ -33,6 +33,7 @@ import com.tomkeuper.bedwars.api.server.ServerType;
 import com.tomkeuper.bedwars.api.stats.IPlayerStats;
 import com.tomkeuper.bedwars.configuration.Sounds;
 import com.tomkeuper.bedwars.support.papi.SupportPAPI;
+import com.tomkeuper.bedwars.utils.ItemBuilder;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -305,18 +306,29 @@ public class Misc {
             for (String s : config.getYml().getConfigurationSection(ConfigPath.GENERAL_CONFIGURATION_STATS_PATH).getKeys(false)) {
                 /* skip inv size, it isn't a content */
                 if (ConfigPath.GENERAL_CONFIGURATION_STATS_GUI_SIZE.contains(s)) continue;
-                /* create new itemStack for content */
-                ItemStack i = nms.createItemStack(config.getYml().getString(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_MATERIAL.replace("%path%", s)).toUpperCase(), 1, (short) config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_DATA.replace("%path%", s)));
-                ItemMeta im = i.getItemMeta();
-                im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
-                im.setDisplayName(replaceStatsPlaceholders(p, getMsg(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-name"), true));
+                
+                String materialStr = config.getYml().getString(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_MATERIAL.replace("%path%", s)).toUpperCase();
+                int data = config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_DATA.replace("%path%", s));
+                
+                ItemBuilder builder;
+                if (BedWars.nms.isPlayerHead(materialStr, (short) data)) {
+                    builder = new ItemBuilder(Material.valueOf(BedWars.getForCurrentVersion("SKULL_ITEM", "PLAYER_HEAD", "PLAYER_HEAD")));
+                    builder.setSkull(p);
+                } else {
+                    builder = new ItemBuilder(Material.valueOf(materialStr));
+                    builder.setDurability(data);
+                }
+
+                builder.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                builder.setName(replaceStatsPlaceholders(p, getMsg(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-name"), true));
+                
                 List<String> lore = new ArrayList<>();
                 for (String string : getList(p, Messages.PLAYER_STATS_GUI_PATH + "-" + s + "-lore")) {
                     lore.add(replaceStatsPlaceholders(p, string, true));
                 }
-                im.setLore(lore);
-                i.setItemMeta(im);
-                inv.setItem(config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_SLOT.replace("%path%", s)), i);
+                builder.setLore(lore);
+                
+                inv.setItem(config.getInt(ConfigPath.GENERAL_CONFIGURATION_STATS_ITEMS_SLOT.replace("%path%", s)), builder.build());
             }
 
             p.openInventory(inv);

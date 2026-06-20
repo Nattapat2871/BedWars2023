@@ -67,7 +67,8 @@ public class ArenaConfig extends ConfigManager {
         rules.add("doWeatherCycle:false");
         rules.add("doFireTick:false");
         if (BedWars.nms.getVersion() >= 14) {
-            rules.add("locatorBar:false"); // Only apply for 1.21.6 and above
+            rules.add("locatorBar:false");
+            rules.add("doLocatorBar:false"); // Correct name for 1.21.4+
         }
         yml.addDefault(ConfigPath.ARENA_GAME_RULES, rules);
         yml.options().copyDefaults(true);

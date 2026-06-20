@@ -39,6 +39,18 @@ public class JoinListenerMultiArena implements Listener {
     public void onJoin(PlayerJoinEvent e) {
         e.setJoinMessage(null);
         final Player p = e.getPlayer();
+        
+        // Broadcast custom join message to lobby players only
+        String prefix = BedWars.getChatSupport().getPrefix(p);
+        String joinMsg = org.bukkit.ChatColor.translateAlternateColorCodes('&', "&8[&a+&8] " + prefix + p.getName());
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getWorld().getName().equalsIgnoreCase(BedWars.config.getLobbyWorldName())) {
+                if (!Arena.isInArena(online)) {
+                    online.sendMessage(joinMsg);
+                }
+            }
+        }
+
         p.getInventory().setArmorContents(null);
 
         JoinHandlerCommon.displayCustomerDetails(p);

@@ -49,6 +49,18 @@ public class QuitAndTeleportListener implements Listener {
     @EventHandler
     public void onLeave(PlayerQuitEvent e) {
         Player p = e.getPlayer();
+
+        // Broadcast custom quit message to lobby players only
+        String prefix = BedWars.getChatSupport().getPrefix(p);
+        String quitMsg = org.bukkit.ChatColor.translateAlternateColorCodes('&', "&8[&c-&8] " + prefix + p.getName());
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.getWorld().getName().equalsIgnoreCase(BedWars.config.getLobbyWorldName())) {
+                if (!Arena.isInArena(online)) {
+                    online.sendMessage(quitMsg);
+                }
+            }
+        }
+
         // Remove from arena
         IArena a = Arena.getArenaByPlayer(p);
         if (a != null) {

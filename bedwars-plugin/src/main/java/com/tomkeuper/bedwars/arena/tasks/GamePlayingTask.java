@@ -245,6 +245,12 @@ public class GamePlayingTask implements Runnable, PlayingTask {
                     Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.REMOVED, getArena().getTeam(e.getKey()), e.getKey(), getArena()));
                 } else {
                     getArena().getShowTime().replace(e.getKey(), e.getValue() - 1);
+                    
+                    // Periodically refresh hidden armor state for all nearby players
+                    for (Player p : e.getKey().getWorld().getPlayers()) {
+                        if (p.equals(e.getKey())) continue;
+                        BedWars.nms.hideArmor(e.getKey(), p);
+                    }
                 }
             }
         }

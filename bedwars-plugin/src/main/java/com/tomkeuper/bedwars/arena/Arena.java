@@ -330,6 +330,61 @@ public class Arena implements IArena {
         });
     }
 
+    private void applyWorldSettings(World world) {
+        if (world == null) return;
+        
+        // Force time to Noon
+        world.setTime(6000L);
+        
+        // Force Daylight Cycle off
+        world.setGameRuleValue("doDaylightCycle", "false");
+        
+        // Apply Game Rules from config
+        List<String> rules = getConfig().getList(ConfigPath.ARENA_GAME_RULES);
+        if (rules != null) {
+            for (String s : rules) {
+                String[] rule = s.split(":");
+                if (rule.length == 2) {
+                    try {
+                        world.setGameRuleValue(rule[0], rule[1]);
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        
+        // Force specific rules for environment locking using reflection to handle new Paper rules
+        try {
+            // Standard Vanilla rules
+            world.setGameRuleValue("doDaylightCycle", "false");
+            world.setGameRuleValue("doMobSpawning", "false");
+            world.setGameRuleValue("doFireTick", "false");
+            world.setGameRuleValue("doWeatherCycle", "false");
+            world.setGameRuleValue("announceAdvancements", "false");
+            
+            // Modern Paper rules using Reflection to bypass Enum checks
+            String[] paperRules = {"locator_bar", "doLocatorBar", "locatorBar"};
+            for (String ruleName : paperRules) {
+                try {
+                    // Try direct value set first (some Paper builds allow this for custom rules)
+                    world.setGameRuleValue(ruleName, "false");
+                } catch (Exception ignored) {}
+                
+                try {
+                    // Try modern GameRule API via reflection
+                    Class<?> gameRuleClass = Class.forName("org.bukkit.GameRule");
+                    Object rule = gameRuleClass.getMethod("getByName", String.class).invoke(null, ruleName);
+                    if (rule != null) {
+                        world.getClass().getMethod("setGameRule", gameRuleClass, Object.class).invoke(world, rule, false);
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            debug("Error applying ultra-robust world settings: " + e.getMessage());
+        }
+        
+        debug("Applied ultra-robust world settings to " + world.getName());
+    }
+
     /**
      * Use this method when the world was loaded successfully.
      */
@@ -358,10 +413,8 @@ public class Arena implements IArena {
         world.getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER)
                 .filter(e -> e.getType() != EntityType.PAINTING).filter(e -> e.getType() != EntityType.ITEM_FRAME)
                 .forEach(Entity::remove);
-        for (String s : getConfig().getList(ConfigPath.ARENA_GAME_RULES)) {
-            String[] rule = s.split(":");
-            if (rule.length == 2) world.setGameRuleValue(rule[0], rule[1]);
-        }
+        
+        applyWorldSettings(world);
         world.setAutoSave(false);
 
         /* Clear setup armor-stands */
@@ -1652,6 +1705,12 @@ public class Arena implements IArena {
             startTime = Instant.now();
         }
         this.status = status;
+        
+        // Lock world environment when game starts
+        if (status == GameState.playing) {
+            applyWorldSettings(world);
+        }
+        
         Bukkit.getPluginManager().callEvent(new GameStateChangeEvent(this, status, status));
         refreshSigns();
         if (status == GameState.playing) {

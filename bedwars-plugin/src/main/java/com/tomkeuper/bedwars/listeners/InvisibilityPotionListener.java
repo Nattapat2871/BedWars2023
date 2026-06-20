@@ -194,13 +194,9 @@ public class InvisibilityPotionListener implements Listener {
             arena.getShowTime().put(player, pe.getDuration() / 20);
             //
             for (Player p1 : player.getWorld().getPlayers()) {
-                if (arena.isSpectator(p1)) {
-                    // hide player armor to spectators
-                    nms.hideArmor(player, p1);
-                } else if (t != arena.getTeam(p1)) {
-                    // hide player armor to other teams
-                    nms.hideArmor(player, p1);
-                }
+                if (p1.equals(player)) continue;
+                // hide player armor to everyone else (including teammates and spectators)
+                nms.hideArmor(player, p1);
             }
             // call custom event
             Bukkit.getPluginManager().callEvent(new PlayerInvisibilityPotionEvent(PlayerInvisibilityPotionEvent.Type.ADDED, t, player, t.getArena()));

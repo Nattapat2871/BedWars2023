@@ -309,11 +309,12 @@ public final class v1_21_R7 extends VersionSupport {
 
     @Override
     public void hideArmor(@NotNull Player victim, Player receiver) {
-        List<Pair<EnumItemSlot, ItemStack>> items = new ArrayList<>();
-        items.add(new Pair<>(EnumItemSlot.f, new ItemStack(Item.b(0))));
-        items.add(new Pair<>(EnumItemSlot.e, new ItemStack(Item.b(0))));
-        items.add(new Pair<>(EnumItemSlot.d, new ItemStack(Item.b(0))));
-        items.add(new Pair<>(EnumItemSlot.c, new ItemStack(Item.b(0))));
+        List<Pair<EnumItemSlot, net.minecraft.world.item.ItemStack>> items = new ArrayList<>();
+        net.minecraft.world.item.ItemStack air = CraftItemStack.asNMSCopy(null);
+        items.add(new Pair<>(EnumItemSlot.f, air));
+        items.add(new Pair<>(EnumItemSlot.e, air));
+        items.add(new Pair<>(EnumItemSlot.d, air));
+        items.add(new Pair<>(EnumItemSlot.c, air));
         PacketPlayOutEntityEquipment packet = new PacketPlayOutEntityEquipment(victim.getEntityId(), items);
         sendPacket(receiver, packet);
     }

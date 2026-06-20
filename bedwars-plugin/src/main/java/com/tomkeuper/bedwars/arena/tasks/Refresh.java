@@ -23,12 +23,24 @@ package com.tomkeuper.bedwars.arena.tasks;
 import com.tomkeuper.bedwars.BedWars;
 import com.tomkeuper.bedwars.api.entity.Despawnable;
 
+import com.tomkeuper.bedwars.api.arena.IArena;
+import com.tomkeuper.bedwars.arena.Arena;
+
 public class Refresh implements Runnable {
 
     @Override
     public void run() {
         for (Despawnable d : BedWars.nms.getDespawnablesList().values()){
             d.refresh();
+        }
+        
+        // Force time to Noon in all active arenas
+        for (IArena a : Arena.getArenas()) {
+            if (a.getWorld() != null) {
+                a.getWorld().setTime(6000L);
+                // Also ensure cycle is off just in case
+                a.getWorld().setGameRuleValue("doDaylightCycle", "false");
+            }
         }
     }
 }
